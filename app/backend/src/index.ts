@@ -341,6 +341,9 @@ app.get("/api/condominios", async (req, res) => {
 
 app.post("/api/condominios", async (req, res) => {
   const user = req.user;
+  if (!user) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
   if (!isAdminOrOperator(user)) {
     return res.status(403).json({ error: "forbidden" });
   }
@@ -901,6 +904,9 @@ app.delete("/api/lancamentos/:id", async (req, res) => {
 
 app.patch("/api/condominios/:id", async (req, res) => {
   const user = req.user;
+  if (!user) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
   if (!isAdminOrOperator(user)) {
     return res.status(403).json({ error: "forbidden" });
   }
