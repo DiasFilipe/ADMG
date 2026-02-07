@@ -73,6 +73,10 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
 
+app.get("/", (_req, res) => {
+  res.json({ ok: true, service: "admg-backend", time: new Date().toISOString() });
+});
+
 app.post("/auth/login", async (req, res) => {
   const email = String(req.body?.email || "").trim().toLowerCase();
   const senha = String(req.body?.senha || "");
