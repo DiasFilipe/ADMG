@@ -1,0 +1,101 @@
+// Prisma schema for ADM G (core + auth)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMINISTRADORA
+  OPERADOR
+  SINDICO
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
+enum LancamentoTipo {
+  RECEITA
+  DESPESA
+}
+
+model Administradora {
+  id          String       @id @default(cuid())
+  nome        String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  condominios Condominio[]
+  usuarios    Usuario[]
+}
+
+model Condominio {
+  id               String          @id @default(cuid())
+  nome             String
+  cnpj             String?
+  endereco         String?
+  administradoraId String?
+  administradora   Administradora? @relation(fields: [administradoraId], references: [id])
+  unidades         Unidade[]
+  lancamentos      Lancamento[]
+  usuarios         Usuario[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Unidade {
+  id            String     @id @default(cuid())
+  identificador String
+  tipo          String?
+  condominioId  String
+  condominio    Condominio @relation(fields: [condominioId], references: [id])
+  moradores     Morador[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Morador {
+  id        String   @id @default(cuid())
+  nome      String
+  documento String?
+  contato   String?
+  unidadeId String
+  unidade   Unidade  @relation(fields: [unidadeId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Usuario {
+  id               String          @id @default(cuid())
+  nome             String
+  email            String          @unique
+  senhaHash        String
+  role             Role
+  authProvider     AuthProvider    @default(LOCAL)
+  googleId         String?         @unique
+  avatarUrl        String?
+  administradoraId String?
+  administradora   Administradora? @relation(fields: [administradoraId], references: [id])
+  condominioId     String?
+  condominio       Condominio?     @relation(fields: [condominioId], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model Lancamento {
+  id           String          @id @default(cuid())
+  tipo         LancamentoTipo
+  valor        Decimal         @db.Decimal(10, 2)
+  data         DateTime
+  categoria    String?
+  descricao    String?
+  condominioId String
+  condominio   Condominio      @relation(fields: [condominioId], references: [id])
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}

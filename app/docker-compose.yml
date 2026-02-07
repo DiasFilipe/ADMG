@@ -1,0 +1,15 @@
+﻿services:
+  db:
+    image: postgres:16
+    container_name: gestora_admg_db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: gestora
+      POSTGRES_PASSWORD: gestora
+      POSTGRES_DB: gestora_admg
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
