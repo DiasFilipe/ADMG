@@ -824,6 +824,9 @@ app.get("/api/condominios/:condominioId/unidades", async (req, res) => {
 app.post("/api/condominios/:condominioId/unidades", async (req, res) => {
   const user = req.user;
   const condominioId = String(req.params.condominioId || "").trim();
+  if (!user) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
   if (!isAdminOrOperator(user)) {
     return res.status(403).json({ error: "forbidden" });
   }
