@@ -1,4 +1,4 @@
-﻿import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient, Role, Plano } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -31,6 +31,7 @@ async function upsertUser(params: {
   role: Role;
   administradoraId?: string | null;
   condominioId?: string | null;
+  plano?: Plano;
 }) {
   const senhaHash = await bcrypt.hash(params.senha, 10);
   await prisma.usuario.upsert({
@@ -40,7 +41,10 @@ async function upsertUser(params: {
       role: params.role,
       administradoraId: params.administradoraId ?? null,
       condominioId: params.condominioId ?? null,
-      senhaHash
+      senhaHash,
+      plano: params.plano ?? Plano.PROFISSIONAL,
+      emailVerificado: true,
+      onboarded: true
     },
     create: {
       nome: params.nome,
@@ -48,7 +52,10 @@ async function upsertUser(params: {
       senhaHash,
       role: params.role,
       administradoraId: params.administradoraId ?? null,
-      condominioId: params.condominioId ?? null
+      condominioId: params.condominioId ?? null,
+      plano: params.plano ?? Plano.PROFISSIONAL,
+      emailVerificado: true,
+      onboarded: true
     }
   });
 }
@@ -232,3 +239,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

@@ -42,6 +42,9 @@ type User = {
   authProvider?: "LOCAL" | "GOOGLE";
   avatarUrl?: string | null;
   googleId?: string | null;
+  plano?: "FREEMIUM" | "ESSENCIAL" | "PROFISSIONAL" | "ESCALA";
+  onboarded?: boolean;
+  emailVerificado?: boolean;
 };
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
@@ -51,7 +54,7 @@ const USER_KEY = "admg_user";
 function roleLabel(role: User["role"]) {
   if (role === "ADMINISTRADORA") return "Administradora";
   if (role === "OPERADOR") return "Operador";
-  return "Sindico";
+  return "Síndico";
 }
 
 function normalizeText(value: string) {
@@ -125,11 +128,47 @@ export default function App() {
     return raw ? (JSON.parse(raw) as User) : null;
   });
 
+  const [authView, setAuthView] = useState<
+    "login" | "register" | "reset-request" | "reset"
+  >(() => {
+    if (window.location.pathname === "/cadastro") return "register";
+    if (window.location.pathname === "/reset") return "reset-request";
+    return "login";
+  });
   const [loginEmail, setLoginEmail] = useState("");
   const [loginSenha, setLoginSenha] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [authInfo, setAuthInfo] = useState<string | null>(null);
+
+  const [registerNome, setRegisterNome] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerSenha, setRegisterSenha] = useState("");
+  const [registerSenhaConfirm, setRegisterSenhaConfirm] = useState("");
+  const [registerRole, setRegisterRole] = useState<"ADMINISTRADORA" | "SINDICO">(
+    "ADMINISTRADORA"
+  );
+  const [registerAdminNome, setRegisterAdminNome] = useState("");
+  const [registerCondoNome, setRegisterCondoNome] = useState("");
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [registerInfo, setRegisterInfo] = useState<string | null>(null);
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerVerifyLink, setRegisterVerifyLink] = useState<string | null>(null);
+
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [resetSenha, setResetSenha] = useState("");
+  const [resetSenhaConfirm, setResetSenhaConfirm] = useState("");
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetInfo, setResetInfo] = useState<string | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const [onboardingPlan, setOnboardingPlan] = useState<
+    "FREEMIUM" | "ESSENCIAL" | "PROFISSIONAL" | "ESCALA"
+  >("FREEMIUM");
+  const [onboardingCondoNome, setOnboardingCondoNome] = useState("");
+  const [onboardingError, setOnboardingError] = useState<string | null>(null);
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
 
   const [condominios, setCondominios] = useState<Condominio[]>([]);
   const [selectedCondominio, setSelectedCondominio] = useState<Condominio | null>(null);
@@ -232,6 +271,11 @@ export default function App() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     setAuthInfo(null);
+    setRegisterInfo(null);
+    setRegisterError(null);
+    setRegisterVerifyLink(null);
+    setResetInfo(null);
+    setResetError(null);
     resetCondominioForm();
     resetUnidadeForm();
     resetMoradorForm();
@@ -245,6 +289,33 @@ export default function App() {
     setKpiResumo(calculateResumo([]));
     setKpiLabel("");
     setKpiLoading(false);
+  }
+
+  function resetRegisterForm() {
+    setRegisterNome("");
+    setRegisterEmail("");
+    setRegisterSenha("");
+    setRegisterSenhaConfirm("");
+    setRegisterRole("ADMINISTRADORA");
+    setRegisterAdminNome("");
+    setRegisterCondoNome("");
+    setRegisterVerifyLink(null);
+  }
+
+  function setAuthRoute(view: "login" | "register" | "reset-request" | "reset") {
+    setAuthView(view);
+    setAuthError(null);
+    setAuthInfo(null);
+    setRegisterError(null);
+    setRegisterInfo(null);
+    setResetError(null);
+    setResetInfo(null);
+    if (view === "login") {
+      resetRegisterForm();
+    }
+    const path =
+      view === "register" ? "/cadastro" : view === "reset-request" || view === "reset" ? "/reset" : "/";
+    window.history.pushState({}, document.title, path);
   }
 
   async function finalizeAuthFromToken(newToken: string) {
@@ -318,9 +389,258 @@ export default function App() {
       setLoginEmail("");
       setLoginSenha("");
     } catch (_err) {
-      setAuthError("Falha no login. Verifique email e senha.");
+      const code = (_err as Error).message;
+      if (code === "email_nao_verificado") {
+        setAuthError("Email nao verificado. Verifique sua caixa de entrada.");
+      } else if (code === "muitas_tentativas") {
+        setAuthError("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
+      } else {
+        setAuthError("Falha no login. Verifique email e senha.");
+      }
     } finally {
       setAuthLoading(false);
+    }
+  }
+
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setRegisterError(null);
+    setRegisterInfo(null);
+    setRegisterVerifyLink(null);
+
+    if (!registerNome.trim() || !registerEmail.trim() || !registerSenha) {
+      setRegisterError("Preencha nome, email e senha.");
+      return;
+    }
+
+    if (registerSenha.length < 8) {
+      setRegisterError("A senha deve ter pelo menos 8 caracteres.");
+      return;
+    }
+
+    if (registerSenha !== registerSenhaConfirm) {
+      setRegisterError("As senhas não conferem.");
+      return;
+    }
+
+    if (registerRole === "ADMINISTRADORA" && !registerAdminNome.trim()) {
+      setRegisterError("Informe o nome da administradora.");
+      return;
+    }
+
+    if (registerRole === "SINDICO" && !registerCondoNome.trim()) {
+      setRegisterError("Informe o nome do condomínio.");
+      return;
+    }
+
+    setRegisterLoading(true);
+    try {
+      const payload: Record<string, string> = {
+        nome: registerNome.trim(),
+        email: registerEmail.trim(),
+        senha: registerSenha,
+        role: registerRole
+      };
+
+      if (registerRole === "ADMINISTRADORA") {
+        payload.administradoraNome = registerAdminNome.trim();
+      } else {
+        payload.condominioNome = registerCondoNome.trim();
+      }
+
+      const res = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (body?.error === "email_em_uso") {
+          throw new Error("email_em_uso");
+        }
+        throw new Error(body?.error || "erro");
+      }
+
+      if (body?.verificationRequired) {
+        const token = String(body?.verificationToken || "");
+        if (token) {
+          setRegisterVerifyLink(`${window.location.origin}/?verify=${token}`);
+        }
+        setRegisterInfo("Enviamos um link de verificacao para o seu email.");
+        return;
+      }
+
+      if (body?.token && body?.user) {
+        saveAuth(body.token, body.user as User);
+        resetRegisterForm();
+        setRegisterInfo("Cadastro realizado com sucesso.");
+      }
+    } catch (err) {
+      if ((err as Error).message === "email_em_uso") {
+        setRegisterError("Esse email já está em uso.");
+      } else if ((err as Error).message === "senha_fraca") {
+        setRegisterError("A senha deve ter pelo menos 8 caracteres.");
+      } else {
+        setRegisterError("Falha no cadastro. Tente novamente.");
+      }
+    } finally {
+      setRegisterLoading(false);
+    }
+  }
+
+  async function handleResendVerification() {
+    if (!loginEmail.trim()) {
+      setAuthError("Informe seu email para reenviar a verificacao.");
+      return;
+    }
+    setAuthError(null);
+    setAuthInfo(null);
+    try {
+      const res = await fetch(`${API_URL}/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: loginEmail.trim() })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error || "erro");
+      }
+      if (body?.verificationToken) {
+        setAuthInfo(`Link de verificacao: ${window.location.origin}/?verify=${body.verificationToken}`);
+      } else {
+        setAuthInfo("Se o email existir, reenviamos o link de verificacao.");
+      }
+    } catch (_err) {
+      setAuthError("Falha ao reenviar verificacao.");
+    }
+  }
+
+  async function handleVerifyEmail(tokenValue: string) {
+    try {
+      const res = await fetch(`${API_URL}/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: tokenValue })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error || "erro");
+      }
+      saveAuth(body.token, body.user as User);
+      setAuthInfo("Email verificado com sucesso.");
+    } catch (_err) {
+      setAuthError("Falha ao verificar email.");
+    }
+  }
+
+  async function handleResetRequest(e: React.FormEvent) {
+    e.preventDefault();
+    setResetError(null);
+    setResetInfo(null);
+
+    if (!resetEmail.trim()) {
+      setResetError("Informe seu email.");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/request-reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail.trim() })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error || "erro");
+      }
+      if (body?.resetToken) {
+        setResetInfo(`Link de redefinicao: ${window.location.origin}/?reset=${body.resetToken}`);
+      } else {
+        setResetInfo("Se o email existir, enviaremos um link de redefinicao.");
+      }
+    } catch (_err) {
+      setResetError("Falha ao solicitar redefinicao.");
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setResetError(null);
+    setResetInfo(null);
+
+    if (!resetToken.trim()) {
+      setResetError("Token invalido.");
+      return;
+    }
+    if (!resetSenha) {
+      setResetError("Informe a nova senha.");
+      return;
+    }
+    if (resetSenha.length < 8) {
+      setResetError("A senha deve ter pelo menos 8 caracteres.");
+      return;
+    }
+    if (resetSenha !== resetSenhaConfirm) {
+      setResetError("As senhas nao conferem.");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken.trim(), senha: resetSenha })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body?.error || "erro");
+      }
+      setResetInfo("Senha atualizada. Voce ja pode entrar.");
+      setAuthRoute("login");
+      setResetSenha("");
+      setResetSenhaConfirm("");
+    } catch (_err) {
+      const code = (_err as Error).message;
+      if (code === "senha_fraca") {
+        setResetError("A senha deve ter pelo menos 8 caracteres.");
+      } else {
+        setResetError("Falha ao redefinir senha.");
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
+  async function handleOnboarding(e: React.FormEvent) {
+    e.preventDefault();
+    setOnboardingError(null);
+
+    if (user?.role === "ADMINISTRADORA" && !onboardingCondoNome.trim()) {
+      setOnboardingError("Informe o nome do condominio.");
+      return;
+    }
+
+    setOnboardingLoading(true);
+    try {
+      const body = await apiFetch("/auth/onboarding", {
+        method: "POST",
+        body: JSON.stringify({
+          plano: onboardingPlan,
+          condominioNome: onboardingCondoNome.trim() || undefined
+        })
+      });
+      if (body?.user) {
+        saveAuth(token, body.user as User);
+      }
+    } catch (_err) {
+      setOnboardingError("Falha ao concluir o cadastro.");
+    } finally {
+      setOnboardingLoading(false);
     }
   }
 
@@ -342,6 +662,20 @@ export default function App() {
   }
 
   useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname === "/cadastro") {
+        setAuthView("register");
+      } else if (window.location.pathname === "/reset") {
+        setAuthView("reset-request");
+      } else {
+        setAuthView("login");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
     const hash = window.location.hash;
     if (hash) {
       const params = new URLSearchParams(hash.replace("#", ""));
@@ -359,11 +693,24 @@ export default function App() {
     const query = new URLSearchParams(window.location.search);
     const linked = query.get("linked");
     const errorQuery = query.get("error");
+    const verifyToken = query.get("verify");
+    const resetTokenParam = query.get("reset");
     if (linked) {
       setAuthInfo("Conta Google vinculada com sucesso.");
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (errorQuery) {
       setAuthError("Falha ao vincular conta Google.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (verifyToken) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      handleVerifyEmail(verifyToken);
+    }
+
+    if (resetTokenParam) {
+      setResetToken(resetTokenParam);
+      setAuthRoute("reset");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -556,7 +903,11 @@ export default function App() {
       resetCondominioForm();
       await loadCondominios();
     } catch (_err) {
-      setCondoError("Falha ao salvar condominio");
+      if ((_err as Error).message === "limite_plano") {
+        setCondoError("Limite do plano freemium atingido (1 condominio).");
+      } else {
+        setCondoError("Falha ao salvar condominio");
+      }
     } finally {
       setSavingCondo(false);
     }
@@ -596,7 +947,11 @@ export default function App() {
       resetUnidadeForm();
       await loadUnidades(selectedCondominio.id);
     } catch (_err) {
-      setUnidadeError("Falha ao salvar unidade");
+      if ((_err as Error).message === "limite_plano") {
+        setUnidadeError("Limite do plano freemium atingido (15 unidades).");
+      } else {
+        setUnidadeError("Falha ao salvar unidade");
+      }
     } finally {
       setSavingUnidade(false);
     }
@@ -992,6 +1347,12 @@ export default function App() {
   }, [token]);
 
   useEffect(() => {
+    if (user?.plano) {
+      setOnboardingPlan(user.plano);
+    }
+  }, [user?.plano]);
+
+  useEffect(() => {
     if (selectedCondominio) {
       const stillExists = condominios.find((c) => c.id === selectedCondominio.id);
       if (!stillExists) {
@@ -1021,9 +1382,24 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">ADM G</p>
-          <h1>Gestora para administradoras</h1>
+        <div className="brand">
+          <div className="logo">
+            <svg className="logo-icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+              <defs>
+                <mask id="duodomo-sun-cut" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+                  <rect x="0" y="0" width="48" height="48" fill="white" />
+                  <path className="logo-cut" d="M0 30 C16 20, 32 20, 48 30" />
+                  <path className="logo-cut" d="M0 36 C16 26, 32 26, 48 36" />
+                </mask>
+              </defs>
+              <circle className="logo-circle" cx="24" cy="24" r="18" mask="url(#duodomo-sun-cut)" />
+            </svg>
+            <div className="logo-text">
+              <span className="logo-mark">DUODOMO</span>
+              <span className="logo-sub">Gestao condominial</span>
+            </div>
+          </div>
+          <h1>Gestao para administradoras</h1>
           <p className="subtitle">Fluxo simples, fechamento rastreavel e cobranca clara.</p>
         </div>
         {user && (
@@ -1055,50 +1431,303 @@ export default function App() {
       </header>
 
       {!token ? (
-        <section className="card auth-card">
-          <h2>Entrar</h2>
-          <p className="muted">Use as credenciais do arquivo CREDENCIAIS.md.</p>
-          <form onSubmit={handleLogin} className="form-grid">
-            <label>
-              <span>Email</span>
-              <input
-                type="email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@admg.local"
-                required
-              />
-            </label>
-            <label>
-              <span>Senha</span>
-              <input
-                type="password"
-                value={loginSenha}
-                onChange={(e) => setLoginSenha(e.target.value)}
-                placeholder="Sua senha"
-                required
-              />
-            </label>
-            <div className="actions">
-              <button className="primary" type="submit" disabled={authLoading}>
-                {authLoading ? "Entrando..." : "Entrar"}
-              </button>
-              <button
-                className="ghost"
-                type="button"
-                onClick={() => {
-                  setAuthError(null);
-                  setAuthInfo(null);
-                  window.location.href = `${API_URL}/auth/google?redirect=${encodeURIComponent(
-                    window.location.origin
-                  )}`;
-                }}
-              >
-                Entrar com Google
+        authView === "login" ? (
+          <section className="card auth-card">
+            <h2>Entrar</h2>
+            <p className="muted">Use as credenciais do arquivo CREDENCIAIS.md.</p>
+            <form onSubmit={handleLogin} className="form-grid">
+              <label>
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="admin@admg.local"
+                  required
+                />
+              </label>
+              <label>
+                <span>Senha</span>
+                <input
+                  type="password"
+                  value={loginSenha}
+                  onChange={(e) => setLoginSenha(e.target.value)}
+                  placeholder="Sua senha"
+                  required
+                />
+              </label>
+              <div className="actions">
+                <button className="primary" type="submit" disabled={authLoading}>
+                  {authLoading ? "Entrando..." : "Entrar"}
+                </button>
+                <button
+                  className="ghost"
+                  type="button"
+                  onClick={() => {
+                    setAuthError(null);
+                    setAuthInfo(null);
+                    window.location.href = `${API_URL}/auth/google?redirect=${encodeURIComponent(
+                      window.location.origin
+                    )}`;
+                  }}
+                >
+                  Entrar com Google
+                </button>
+              </div>
+              <div className="auth-links">
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => setAuthRoute("reset-request")}
+                >
+                  Esqueci minha senha
+                </button>
+                <button type="button" className="link-button" onClick={handleResendVerification}>
+                  Reenviar verificacao
+                </button>
+              </div>
+              {authInfo && <p className="success">{authInfo}</p>}
+              {authError && <p className="error">{authError}</p>}
+            </form>
+            <div className="auth-switch">
+              <span>Não tem conta?</span>
+              <button type="button" className="link-button" onClick={() => setAuthRoute("register")}>
+                Cadastre-se
               </button>
             </div>
-            {authInfo && <p className="success">{authInfo}</p>}
-            {authError && <p className="error">{authError}</p>}
+          </section>
+        ) : authView === "register" ? (
+          <section className="card auth-card">
+            <h2>Criar conta</h2>
+            <p className="muted">Leva menos de 2 minutos.</p>
+            <form onSubmit={handleRegister} className="form-grid">
+              <label>
+                <span>Nome completo</span>
+                <input
+                  value={registerNome}
+                  onChange={(e) => setRegisterNome(e.target.value)}
+                  placeholder="Seu nome"
+                  required
+                />
+              </label>
+              <label>
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={registerEmail}
+                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  placeholder="voce@empresa.com"
+                  required
+                />
+              </label>
+              <label>
+                <span>Senha</span>
+                <input
+                  type="password"
+                  value={registerSenha}
+                  onChange={(e) => setRegisterSenha(e.target.value)}
+                  placeholder="Crie uma senha"
+                  required
+                />
+              </label>
+              <label>
+                <span>Confirmar senha</span>
+                <input
+                  type="password"
+                  value={registerSenhaConfirm}
+                  onChange={(e) => setRegisterSenhaConfirm(e.target.value)}
+                  placeholder="Repita a senha"
+                  required
+                />
+              </label>
+              <label>
+                <span>Perfil</span>
+                <select
+                  value={registerRole}
+                  onChange={(e) => {
+                    const value = e.target.value as "ADMINISTRADORA" | "SINDICO";
+                    setRegisterRole(value);
+                  }}
+                >
+                  <option value="ADMINISTRADORA">Administradora</option>
+                  <option value="SINDICO">Síndico</option>
+                </select>
+              </label>
+              {registerRole === "ADMINISTRADORA" ? (
+                <label>
+                  <span>Nome da administradora</span>
+                  <input
+                    value={registerAdminNome}
+                    onChange={(e) => setRegisterAdminNome(e.target.value)}
+                    placeholder="Administradora Exemplo"
+                    required
+                  />
+                </label>
+              ) : (
+                <label>
+                  <span>Nome do condomínio</span>
+                  <input
+                    value={registerCondoNome}
+                    onChange={(e) => setRegisterCondoNome(e.target.value)}
+                    placeholder="Condomínio Exemplo"
+                    required
+                  />
+                </label>
+              )}
+              <div className="actions">
+                <button className="primary" type="submit" disabled={registerLoading}>
+                  {registerLoading ? "Cadastrando..." : "Cadastre-se"}
+                </button>
+                <button
+                  className="ghost"
+                  type="button"
+                  onClick={() => setAuthRoute("login")}
+                >
+                  Já tenho conta
+                </button>
+              </div>
+              {registerVerifyLink && (
+                <p className="success">
+                  Para testes:{" "}
+                  <a className="inline-link" href={registerVerifyLink}>
+                    Verificar email
+                  </a>
+                </p>
+              )}
+              {registerInfo && <p className="success">{registerInfo}</p>}
+              {registerError && <p className="error">{registerError}</p>}
+            </form>
+          </section>
+        ) : authView === "reset-request" ? (
+          <section className="card auth-card">
+            <h2>Recuperar senha</h2>
+            <p className="muted">Enviaremos um link para redefinir sua senha.</p>
+            <form onSubmit={handleResetRequest} className="form-grid">
+              <label>
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="voce@empresa.com"
+                  required
+                />
+              </label>
+              <div className="actions">
+                <button className="primary" type="submit" disabled={resetLoading}>
+                  {resetLoading ? "Enviando..." : "Enviar link"}
+                </button>
+                <button className="ghost" type="button" onClick={() => setAuthRoute("login")}>
+                  Voltar
+                </button>
+              </div>
+              {resetInfo && (
+                <p className="success">
+                  {resetInfo}{" "}
+                  {resetInfo.includes("http") && (
+                    <a className="inline-link" href={resetInfo.replace("Link de redefinicao: ", "")}>
+                      Abrir link
+                    </a>
+                  )}
+                </p>
+              )}
+              {resetError && <p className="error">{resetError}</p>}
+            </form>
+          </section>
+        ) : (
+          <section className="card auth-card">
+            <h2>Nova senha</h2>
+            <p className="muted">Defina uma nova senha para sua conta.</p>
+            <form onSubmit={handleResetPassword} className="form-grid">
+              <label>
+                <span>Token</span>
+                <input
+                  value={resetToken}
+                  onChange={(e) => setResetToken(e.target.value)}
+                  placeholder="Cole o token"
+                  required
+                />
+              </label>
+              <label>
+                <span>Nova senha</span>
+                <input
+                  type="password"
+                  value={resetSenha}
+                  onChange={(e) => setResetSenha(e.target.value)}
+                  placeholder="Nova senha"
+                  required
+                />
+              </label>
+              <label>
+                <span>Confirmar senha</span>
+                <input
+                  type="password"
+                  value={resetSenhaConfirm}
+                  onChange={(e) => setResetSenhaConfirm(e.target.value)}
+                  placeholder="Repita a nova senha"
+                  required
+                />
+              </label>
+              <div className="actions">
+                <button className="primary" type="submit" disabled={resetLoading}>
+                  {resetLoading ? "Salvando..." : "Atualizar senha"}
+                </button>
+                <button className="ghost" type="button" onClick={() => setAuthRoute("login")}>
+                  Voltar
+                </button>
+              </div>
+              {resetInfo && <p className="success">{resetInfo}</p>}
+              {resetError && <p className="error">{resetError}</p>}
+            </form>
+          </section>
+        )
+      ) : user && !user.onboarded ? (
+        <section className="card auth-card">
+          <h2>Finalize seu cadastro</h2>
+          <p className="muted">Escolha um plano e conclua a configuracao inicial.</p>
+          <form onSubmit={handleOnboarding} className="form-grid">
+            <label>
+              <span>Plano</span>
+              <select
+                value={onboardingPlan}
+                onChange={(e) =>
+                  setOnboardingPlan(
+                    e.target.value as "FREEMIUM" | "ESSENCIAL" | "PROFISSIONAL" | "ESCALA"
+                  )
+                }
+              >
+                <option value="FREEMIUM">Freemium</option>
+                <option value="ESSENCIAL">Essencial</option>
+                <option value="PROFISSIONAL">Profissional</option>
+                <option value="ESCALA">Escala</option>
+              </select>
+            </label>
+            {user.role === "ADMINISTRADORA" ? (
+              <label>
+                <span>Nome do primeiro condominio</span>
+                <input
+                  value={onboardingCondoNome}
+                  onChange={(e) => setOnboardingCondoNome(e.target.value)}
+                  placeholder="Condominio Exemplo"
+                  required
+                />
+              </label>
+            ) : (
+              <label>
+                <span>Nome do condominio</span>
+                <input
+                  value={onboardingCondoNome}
+                  onChange={(e) => setOnboardingCondoNome(e.target.value)}
+                  placeholder="Condominio Exemplo"
+                />
+              </label>
+            )}
+            <div className="actions">
+              <button className="primary" type="submit" disabled={onboardingLoading}>
+                {onboardingLoading ? "Concluindo..." : "Concluir cadastro"}
+              </button>
+            </div>
+            {onboardingError && <p className="error">{onboardingError}</p>}
           </form>
         </section>
       ) : (

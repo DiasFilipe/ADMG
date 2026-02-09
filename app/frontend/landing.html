@@ -1,86 +1,108 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ADM G | Gestao de condominios para administradoras</title>
+    <title>DUODOMO | Gestão de condomínios para administradoras</title>
     <link rel="stylesheet" href="/landing.css" />
   </head>
   <body>
-    <div class="bg-orbit"></div>
     <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
 
     <header class="nav">
-      <div class="logo">ADM G</div>
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+          <defs>
+            <mask id="duodomo-sun-cut" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+              <rect x="0" y="0" width="48" height="48" fill="white" />
+              <path class="logo-cut" d="M0 30 C16 20, 32 20, 48 30" />
+              <path class="logo-cut" d="M0 36 C16 26, 32 26, 48 36" />
+            </mask>
+          </defs>
+          <circle class="logo-circle" cx="24" cy="24" r="18" mask="url(#duodomo-sun-cut)" />
+        </svg>
+        <div class="logo-text">
+          <span class="logo-mark">DUODOMO</span>
+          <span class="logo-sub">Gestão condominial</span>
+        </div>
+      </div>
       <nav class="nav-links">
         <a href="#produto">Produto</a>
-        <a href="#processo">Processo</a>
+        <a href="#processo">Como funciona</a>
         <a href="#recursos">Recursos</a>
         <a href="#planos">Planos</a>
       </nav>
       <div class="nav-actions">
         <a class="btn ghost" href="/">Entrar</a>
-        <a class="btn primary" href="#contato">Agendar demo</a>
+        <a class="btn primary" href="/cadastro">Cadastre-se</a>
       </div>
     </header>
 
     <main>
       <section class="hero" id="produto">
         <div class="hero-text">
-          <p class="eyebrow">Gestao operacional para administradoras</p>
-          <h1>Fechamento mensal claro. Cobranca simples. Transparencia real.</h1>
+          <p class="eyebrow">Plataforma para administradoras e síndicos profissionais</p>
+          <h1>Operação condominial clara, contínua e confiável.</h1>
           <p class="lead">
-            O ADM G organiza o dia a dia da administradora: multi-condominio, lancamentos,
-            unidades, moradores e relatorios em um fluxo enxuto. Menos planilhas. Mais
-            confianca.
+            O DUODOMO organiza cadastros, financeiro e relatórios em um fluxo único.
+            Menos ruído. Mais controle. Sem inflar a rotina da equipe.
           </p>
           <div class="cta-row">
-            <a class="btn primary" href="/">Abrir plataforma</a>
-            <a class="btn ghost" href="#recursos">Ver recursos</a>
+            <a class="btn primary" href="/cadastro">Cadastre-se</a>
+            <a class="btn ghost" href="/">Entrar na plataforma</a>
           </div>
           <div class="hero-metrics">
             <div class="metric">
-              <span class="metric-title">Setup enxuto</span>
-              <span class="metric-text">Implantacao em semanas, nao meses.</span>
+              <span class="metric-title">Implantação rápida</span>
+              <span class="metric-text">Onboarding leve, sem travar o mês.</span>
             </div>
             <div class="metric">
-              <span class="metric-title">Auditoria amigavel</span>
-              <span class="metric-text">Tudo rastreavel e exportavel.</span>
+              <span class="metric-title">Visão por carteira</span>
+              <span class="metric-text">Multi-condomínio com contexto claro.</span>
             </div>
             <div class="metric">
-              <span class="metric-title">Multi-condominio</span>
-              <span class="metric-text">Troca rapida de contexto.</span>
+              <span class="metric-title">Prestação simples</span>
+              <span class="metric-text">Relatórios prontos para síndicos.</span>
             </div>
           </div>
         </div>
-        <div class="hero-panel">
-          <div class="panel-header">
-            <div>
-              <p class="panel-eyebrow">Resumo do mes</p>
-              <h3>Condominio Residencial Aurora</h3>
+        <div class="hero-media">
+          <figure class="hero-photo">
+            <img
+              src="/duodomo-cerrado.jpg"
+              alt="Condomínio no Cerrado brasileiro ao entardecer, com tons de vermelho e laranja."
+            />
+          </figure>
+          <div class="hero-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-eyebrow">Resumo do mês</p>
+                <h3>Condomínio Parque do Lago</h3>
+              </div>
+              <span class="tag">Simulação</span>
             </div>
-            <span class="tag">Simulacao</span>
-          </div>
-          <div class="panel-grid">
-            <div class="panel-card">
-              <span>Receitas</span>
-              <strong>R$ 12.300,00</strong>
-              <p>Cotas condominiais</p>
-            </div>
-            <div class="panel-card">
-              <span>Despesas</span>
-              <strong>R$ 6.480,00</strong>
-              <p>Limpeza + manutencao</p>
-            </div>
-            <div class="panel-card">
-              <span>Saldo</span>
-              <strong>R$ 5.820,00</strong>
-              <p>Fechamento do mes</p>
-            </div>
-            <div class="panel-card">
-              <span>Inadimplencia</span>
-              <strong>3 unidades</strong>
-              <p>Relatorio por unidade</p>
+            <div class="panel-grid">
+              <div class="panel-card">
+                <span>Receitas</span>
+                <strong>R$ 12.300,00</strong>
+                <p>Cotas condominiais</p>
+              </div>
+              <div class="panel-card">
+                <span>Despesas</span>
+                <strong>R$ 6.480,00</strong>
+                <p>Limpeza + manutenção</p>
+              </div>
+              <div class="panel-card">
+                <span>Saldo</span>
+                <strong>R$ 5.820,00</strong>
+                <p>Fechamento do mês</p>
+              </div>
+              <div class="panel-card">
+                <span>Inadimplência</span>
+                <strong>3 unidades</strong>
+                <p>Monitoramento contínuo</p>
+              </div>
             </div>
           </div>
         </div>
@@ -88,62 +110,62 @@
 
       <section class="section" id="processo">
         <div class="section-head">
-          <h2>Processo enxuto para o fechamento</h2>
-          <p>Um fluxo objetivo para operar e encerrar o mes com seguranca.</p>
+          <h2><span class="nowrap">Um processo objetivo, do cadastro ao fechamento</span></h2>
+          <p>Fluxo enxuto para operar e encerrar o mês sem perder controle.</p>
         </div>
         <div class="steps">
           <div class="step">
             <span class="step-number">01</span>
-            <h3>Importar e organizar</h3>
-            <p>Unidades, moradores e perfis em um painel unico.</p>
+            <h3>Configurar estrutura</h3>
+            <p>Condomínios, unidades e moradores em um painel único.</p>
           </div>
           <div class="step">
             <span class="step-number">02</span>
-            <h3>Lancar receitas e despesas</h3>
-            <p>Controle financeiro com filtros por periodo e categoria.</p>
+            <h3>Registrar lançamentos</h3>
+            <p>Receitas e despesas com filtros por período e categoria.</p>
           </div>
           <div class="step">
             <span class="step-number">03</span>
-            <h3>Gerar cobrancas</h3>
-            <p>Pix e boleto com acompanhamento de inadimplencia.</p>
+            <h3>Acompanhar cobranças</h3>
+            <p>Pix, boleto e inadimplência com visão por unidade.</p>
           </div>
           <div class="step">
             <span class="step-number">04</span>
-            <h3>Emitir relatorios</h3>
-            <p>Prestacao de contas clara, com exportacao em CSV e PDF.</p>
+            <h3>Prestar contas</h3>
+            <p>Relatórios consistentes, exportação fácil e rastreável.</p>
           </div>
         </div>
       </section>
 
       <section class="section" id="recursos">
         <div class="section-head">
-          <h2>Recursos essenciais, sem inflar o sistema</h2>
-          <p>O que a administradora precisa para operar com previsibilidade.</p>
+          <h2><span class="nowrap">Recursos essenciais para quem opera o condomínio</span></h2>
+          <p>O núcleo que administradoras e síndicos precisam para seguir o mês.</p>
         </div>
         <div class="features">
           <article class="feature-card">
-            <h3>Multi-condominio e permissoes</h3>
-            <p>Equipe, sindico e conselho com visoes claras e seguras.</p>
+            <h3>Multi-condomínio e permissões</h3>
+            <p>Equipe, síndico e conselho com visões claras.</p>
           </article>
           <article class="feature-card">
-            <h3>Lancamentos financeiros</h3>
-            <p>Receitas e despesas com filtros por mes ou intervalo.</p>
+            <h3>Lançamentos financeiros</h3>
+            <p>Receitas e despesas com filtros por mês ou intervalo.</p>
           </article>
           <article class="feature-card">
             <h3>Unidades e moradores</h3>
-            <p>Cadastro completo e exportacao rapida para auditoria.</p>
+            <p>Cadastro completo e exportação rápida para auditoria.</p>
           </article>
           <article class="feature-card">
-            <h3>Relatorios transparentes</h3>
-            <p>Resumo financeiro e demonstrativos sempre acessiveis.</p>
+            <h3>Indicadores do mês</h3>
+            <p>KPIs claros para acompanhar saldo e inadimplência.</p>
           </article>
           <article class="feature-card">
-            <h3>Indicadores do mes</h3>
-            <p>KPIs para acompanhar performance e saldo em tempo real.</p>
+            <h3>Relatórios transparentes</h3>
+            <p>Demonstrativos prontos para assembleia.</p>
           </article>
           <article class="feature-card">
-            <h3>Base pronta para cobranca</h3>
-            <p>Pix, boleto e controle de inadimplencia por unidade.</p>
+            <h3>Base para cobranças</h3>
+            <p>Pix e boleto integrados à rotina.</p>
           </article>
         </div>
       </section>
@@ -151,39 +173,50 @@
       <section class="section" id="planos">
         <div class="section-head">
           <h2>Planos pensados para administradoras</h2>
-          <p>Comece pequeno e escale conforme sua carteira cresce.</p>
+          <p>Comece simples e escale conforme sua carteira cresce.</p>
         </div>
         <div class="pricing">
+          <article class="price-card">
+            <h3>Freemium</h3>
+            <p class="price">Grátis</p>
+            <ul>
+              <li>1 condomínio</li>
+              <li>Até 15 unidades</li>
+              <li>Cadastros básicos</li>
+              <li>Exportação CSV</li>
+            </ul>
+            <a class="btn ghost" href="/cadastro">Cadastre-se</a>
+          </article>
           <article class="price-card">
             <h3>Essencial</h3>
             <p class="price">R$ 2,50 / unidade</p>
             <ul>
-              <li>Multi-condominio</li>
+              <li>Multi-condomínio</li>
               <li>Unidades e moradores</li>
-              <li>Lancamentos e filtros</li>
-              <li>Exportacao CSV</li>
+              <li>Lançamentos e filtros</li>
+              <li>Exportação CSV</li>
             </ul>
             <a class="btn ghost" href="#contato">Quero saber mais</a>
           </article>
           <article class="price-card highlight">
-            <h3>Operacional</h3>
+            <h3>Profissional</h3>
             <p class="price">R$ 3,20 / unidade</p>
             <ul>
               <li>Fechamento mensal guiado</li>
-              <li>Relatorios em PDF</li>
-              <li>Controle de inadimplencia</li>
-              <li>Suporte prioritario</li>
+              <li>Relatórios em PDF</li>
+              <li>Controle de inadimplência</li>
+              <li>Suporte prioritário</li>
             </ul>
-            <a class="btn primary" href="#contato">Agendar demo</a>
+            <a class="btn primary" href="/cadastro">Cadastre-se</a>
           </article>
           <article class="price-card">
             <h3>Escala</h3>
             <p class="price">Sob consulta</p>
             <ul>
               <li>Fluxos customizados</li>
-              <li>Integracoes bancarias</li>
+              <li>Integrações bancárias</li>
               <li>API dedicada</li>
-              <li>Onboarding avancado</li>
+              <li>Onboarding avançado</li>
             </ul>
             <a class="btn ghost" href="#contato">Falar com vendas</a>
           </article>
@@ -194,19 +227,19 @@
         <div class="cta">
           <div>
             <h2>Pronto para organizar o fechamento mensal?</h2>
-            <p>Entre em contato para ver o ADM G em funcionamento com seus dados.</p>
+            <p>Veja o DUODOMO em funcionamento com seus dados reais.</p>
           </div>
           <div class="cta-actions">
             <a class="btn primary" href="/">Abrir plataforma</a>
-            <a class="btn ghost" href="mailto:contato@admg.app">contato@admg.app</a>
+            <a class="btn ghost" href="mailto:contato@duodomo.app">contato@duodomo.app</a>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <p>ADM G • Gestao de condominios para administradoras</p>
-      <p class="muted">© <span id="year"></span> ADM G. Todos os direitos reservados.</p>
+      <p>DUODOMO - Gestão de condomínios para administradoras</p>
+      <p class="muted">(c) <span id="year"></span> DUODOMO. Todos os direitos reservados.</p>
     </footer>
 
     <script>

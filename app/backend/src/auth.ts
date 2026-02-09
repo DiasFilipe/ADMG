@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+if (JWT_SECRET === "dev_secret") {
+  console.warn("JWT_SECRET nao configurado. Defina um valor forte no ambiente.");
+}
 
 export type AuthPayload = {
   id: string;
